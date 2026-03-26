@@ -77,13 +77,20 @@ return {
               return depth
             end
 
+            local function line_continues(line)
+              -- strip trailing comment and whitespace, then check for pipe
+              local stripped = line:gsub('#.*$', ''):gsub('%s+$', '')
+              return stripped:match('|>$') ~= nil or stripped:match('%%%>%%%s*$') ~= nil
+            end
+
             local start_line = vim.fn.line('.')
             local end_line = start_line
             local depth = 0
             for lnum = start_line, vim.fn.line('$') do
-              depth = depth + line_depth(vim.fn.getline(lnum))
+              local l = vim.fn.getline(lnum)
+              depth = depth + line_depth(l)
               end_line = lnum
-              if depth <= 0 then break end
+              if depth <= 0 and not line_continues(l) then break end
             end
             local text = table.concat(vim.fn.getline(start_line, end_line), '\n')
             vim.fn['slime#send'](text .. '\n')
@@ -97,6 +104,53 @@ return {
         end,
       })
     end,
+  },
+
+  -- LaTeX equation preview as Unicode art
+  {
+    'jbyuki/nabla.nvim',
+    ft = { 'markdown', 'quarto', 'rmd', 'tex' },
+    config = function()
+      vim.api.nvim_create_autocmd('FileType', {
+        pattern = { 'markdown', 'quarto', 'rmd', 'tex' },
+        callback = function()
+          vim.api.nvim_create_autocmd('CursorHold', {
+            buffer = 0,
+            callback = function()
+              pcall(require('nabla').popup)
+            end,
+          })
+        end,
+      })
+    end,
+    keys = {
+      { '<leader>qm', function() require('nabla').popup() end,       desc = '[Q]uarto [M]ath preview popup' },
+      { '<leader>qM', function() require('nabla').toggle_virt() end, desc = '[Q]uarto [M]ath inline toggle' },
+    },
+  },
+
+  -- Render markdown/math inline in buffer
+  {
+    'MeanderingProgrammer/render-markdown.nvim',
+    dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' },
+    ft = { 'markdown', 'quarto', 'rmd' },
+    opts = {
+      math = { enabled = true },
+      heading = { enabled = true },
+      code = { enabled = true },
+    },
+  },
+
+  -- Session persistence: auto-save/restore sessions per directory
+  {
+    'folke/persistence.nvim',
+    event = 'BufReadPre',
+    opts = {},
+    keys = {
+      { '<leader>qs', function() require('persistence').load() end,                desc = '[Q]uit: restore [S]ession for cwd' },
+      { '<leader>ql', function() require('persistence').load({ last = true }) end, desc = '[Q]uit: restore [L]ast session' },
+      { '<leader>qd', function() require('persistence').stop() end,                desc = '[Q]uit: [D]on\'t save session on exit' },
+    },
   },
 
   -- Quarto: LSP + code runner for .qmd files
