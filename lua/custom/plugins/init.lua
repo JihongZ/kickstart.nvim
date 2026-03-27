@@ -179,6 +179,7 @@ return {
       { '<leader>qp', function()
           local file = vim.fn.expand('%:p')
           local port = 4321
+          vim.fn.system('lsof -ti:' .. port .. ' | xargs kill -9 2>/dev/null')
           vim.cmd('botright 15split | terminal quarto preview ' .. file .. ' --no-browser --port ' .. port .. ' --no-render')
         end, desc = 'Quarto [P]review (SSH)' },
     },
