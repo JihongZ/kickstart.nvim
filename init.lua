@@ -98,11 +98,19 @@ vim.g.have_nerd_font = false
 -- NOTE: You can change these options as you wish!
 --  For more options, you can see `:help option-list`
 
+-- Auto-reload files changed outside Neovim
+vim.o.autoread = true
+vim.api.nvim_create_autocmd({ 'FocusGained', 'BufEnter', 'CursorHold', 'CursorHoldI' }, {
+  callback = function()
+    if vim.fn.mode() ~= 'c' then vim.cmd 'checktime' end
+  end,
+})
+
 -- Make line numbers default
 vim.o.number = true
 -- You can also add relative line numbers, to help with jumping.
 --  Experiment for yourself to see if you like it!
--- vim.o.relativenumber = true
+vim.o.relativenumber = true
 
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.o.mouse = 'a'
@@ -970,6 +978,51 @@ require('lazy').setup({
       lazy = '💤 ',
     },
   },
+})
+
+-- Theme toggle: <leader>tt switches between latte (light) and macchiato (dark)
+local _theme_light = false
+vim.keymap.set('n', '<leader>tt', function()
+  _theme_light = not _theme_light
+  local flavour = _theme_light and 'latte' or 'macchiato'
+  require('catppuccin').setup { flavour = flavour, styles = { comments = { 'italic' } } }
+  vim.cmd.colorscheme 'catppuccin'
+  if _theme_light then
+    vim.api.nvim_set_hl(0, 'Cursor',     { fg = '#eff1f5', bg = '#4c4f69' })
+    vim.api.nvim_set_hl(0, 'CursorIM',   { fg = '#eff1f5', bg = '#4c4f69' })
+    vim.api.nvim_set_hl(0, 'TermCursor', { reverse = true })
+    vim.opt.guicursor = 'n-v-c:block-Cursor,i-ci-ve:ver25-Cursor,r-cr:hor20-Cursor'
+  else
+    vim.api.nvim_set_hl(0, 'Cursor',     {})
+    vim.api.nvim_set_hl(0, 'CursorIM',   {})
+    vim.api.nvim_set_hl(0, 'TermCursor', {})
+    vim.opt.guicursor = 'n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50'
+  end
+  vim.notify('Theme: catppuccin-' .. flavour, vim.log.levels.INFO)
+end, { desc = '[T]oggle [T]heme light/dark' })
+
+-- Light theme for Quarto files
+vim.api.nvim_create_autocmd('BufEnter', {
+  pattern = { '*.qmd', '*.Rmd' },
+  callback = function()
+    require('catppuccin').setup { flavour = 'latte', styles = { comments = { 'italic' } } }
+    vim.cmd.colorscheme 'catppuccin'
+    vim.api.nvim_set_hl(0, 'Cursor',     { fg = '#eff1f5', bg = '#4c4f69' })
+    vim.api.nvim_set_hl(0, 'CursorIM',  { fg = '#eff1f5', bg = '#4c4f69' })
+    vim.api.nvim_set_hl(0, 'TermCursor',{ reverse = true })
+    vim.opt.guicursor = 'n-v-c:block-Cursor,i-ci-ve:ver25-Cursor,r-cr:hor20-Cursor'
+  end,
+})
+vim.api.nvim_create_autocmd('BufLeave', {
+  pattern = { '*.qmd', '*.Rmd' },
+  callback = function()
+    require('catppuccin').setup { flavour = 'macchiato', styles = { comments = { 'italic' } } }
+    vim.cmd.colorscheme 'catppuccin'
+    vim.api.nvim_set_hl(0, 'Cursor',     {})
+    vim.api.nvim_set_hl(0, 'CursorIM',   {})
+    vim.api.nvim_set_hl(0, 'TermCursor', {})
+    vim.opt.guicursor = 'n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50'
+  end,
 })
 
 -- The line beneath this is called `modeline`. See `:help modeline`

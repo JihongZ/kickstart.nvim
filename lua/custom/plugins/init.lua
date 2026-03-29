@@ -48,7 +48,7 @@ return {
           set_slime_target('R')
           vim.keymap.set('n', '<leader>-', 'a <- <Esc>', { buffer = true, desc = 'Insert <-' })
           vim.keymap.set('i', '<leader>-', ' <- ',       { buffer = true, desc = 'Insert <-' })
-          vim.keymap.set('i', '<C-m>', ' %>% ',          { buffer = true, desc = 'Insert %>%' })
+          vim.keymap.set('i', '<M-=>', ' %>% ',          { buffer = true, desc = 'Insert %>%' })
           -- Send word under cursor
           vim.keymap.set('n', '<leader>rw', function()
             vim.fn['slime#send'](vim.fn.expand('<cword>') .. '\n')
